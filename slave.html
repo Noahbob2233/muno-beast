@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Cobrowsing test</title>
+  </head>
+  <body>
+    <h2>CONTENT BELOW</h2>
+    <main></main>
+  </body>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    var socket = io.connect('http://localhost:4000');
+  </script>
+  <script type="text/javascript" src='./diffDOM.js'></script>
+  <script type="text/javascript" src='./cobrowsing.js' data-type='slave'></script>
+</html>

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Cobrowsing test</title>
+  </head>
+  <body>
+    <p>caca</p>
+  </body>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    var socket = io.connect('http://localhost:4000');
+  </script>
+
+  <script type="text/javascript" src='./diffDOM.js'></script>
+  <script type="text/javascript" src='./cobrowsing.js'></script>
+  <script type="text/javascript">
+    setTimeout(function() {
+      var el = document.createElement('p')
+      el.innerHTML='<b>blah</b>'
+      document.body.appendChild(el)
+    }, 200)
+    setTimeout(function() {
+      var el = document.createElement('p')
+      el.innerHTML='<i>blah2</i>'
+      document.body.appendChild(el)
+    }, 500)
+  </script>
+
+</html>
