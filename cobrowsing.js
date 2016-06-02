@@ -2,9 +2,10 @@
   'use strict'
 
   var CoBrowsing = function CoBrowsing () {
-    console.log(win.document.currentScript)
     this.html = null
+    this.lastfullhtml = Date.now()
     this.shadow = null
+    this.timeout = null
     var Ddom = win.diffDOM
     this.dd = new Ddom()
     this.slave = (win.document.currentScript.dataset['type'] === 'slave') || false
@@ -27,17 +28,16 @@
   CoBrowsing.prototype.configureSlave = function () {
     var origContent = document.querySelector('main')
     // Create the first shadow root
-    this.shadow = origContent.createShadowRoot()
+    this.shadow = origContent// .createShadowRoot()
   }
 
-  CoBrowsing.prototype.listenEvents = function () {
+  CoBrowsing.prototype.listenEvents = function () {
     var _this = this
     win.socket.on('full', function (full) {
-      console.log(full)
       _this.shadow.innerHTML = full
     })
     win.socket.on('diff', function (diff) {
-      console.log(diff)
+      console.log(JSON.parse(diff))
       _this.dd.apply(_this.shadow, JSON.parse(diff))
     })
   }
@@ -57,12 +57,10 @@
   CoBrowsing.prototype.addOnload = function () {
     console.log('CoBrowsing::addOnload')
     if (win.readyState === 'complete') {
-      console.log('document loaded')
       this.initialize()
     } else {
       var _this = this
       win.addEventListener('load', function () {
-        console.log('document loaded')
         _this.initialize()
       })
     }
@@ -78,28 +76,43 @@
     console.log('CoBrowsing::addMutationObserver')
     var _this = this
     var observer = new win.MutationObserver(function (mutations) {
-      _this._updated()
+      if (_this.timeout) {
+        return
+      }
+      _this.timeout = setTimeout(function () {
+        _this._updated()
+        clearTimeout(_this.timeout)
+        _this.timeout = null
+      }, 1000)
     })
 
     observer.observe(win.document, {
       subtree: true,
       childList: true,
       attributes: true,
-      attributeOldValue: true,
-      characterData: true,
-      characterDataOldValue: true
+      // attributeOldValue: true,
+      characterData: true
+      // characterDataOldValue: true
     })
   }
 
   CoBrowsing.prototype._updated = function () {
     console.log('CoBrowsing::_updated')
-    this.getHTML() // BAD!!
-    this.sendHtml()
-    //
-    // var oldHtml = this.html
-    // var newHtml = this.getHTML()
-    // var diff = this.dd.diff(oldHtml, newHtml)
-    // this.sendPatch(diff)
+    var timediff = 10000
+    if ((timediff = Date.now() - this.lastfullhtml) > 5000) {
+      this.lastfullhtml = Date.now()
+      console.log('send full', timediff)
+      this.getHTML()
+      this.sendHtml()
+      return
+    }
+
+    var oldHtml = this.html
+    var newHtml = this.getHTML()
+    var diff = this.dd.diff(oldHtml, newHtml)
+    if (diff.length) {
+      this.sendPatch(diff)
+    }
   }
 
   CoBrowsing.prototype.listenMouseEvents = function () {
